@@ -10,3 +10,6 @@
 
 *storybook.log
 storybook-static
+
+# Package managers (project uses Bun)
+package-lock.json
