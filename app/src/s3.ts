@@ -8,7 +8,7 @@ config();
 // Configure S3 client for MinIO
 export const s3Client = new S3Client({
   region: process.env.AWS_REGION || 'us-east-1',
-  endpoint: process.env.AWS_ENDPOINT_URL || 'http://localhost:9000',
+  endpoint: process.env.S3_ENDPOINT || 'http://localhost:9000',
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID || 'minioadmin',
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'minioadmin',
@@ -16,7 +16,7 @@ export const s3Client = new S3Client({
   forcePathStyle: true, // Required for MinIO
 });
 
-export const bucketName = process.env.S3_BUCKET_NAME || 'tdc-photos';
+export const bucketName = process.env.S3_BUCKET || 'tdc-photos';
 
 export async function generateUploadUrl(key: string, contentType: string = 'image/jpeg'): Promise<string> {
   const command = new PutObjectCommand({

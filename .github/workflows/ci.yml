@@ -36,10 +36,16 @@ jobs:
       S3_ENDPOINT: http://localhost:9000
       REDIS_URL: redis://localhost:6379
       NODE_ENV: test
+      PRISMA_SKIP_POSTINSTALL_GENERATE: true
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client redis-tools curl
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -63,17 +69,18 @@ jobs:
           # Wait for MinIO to be ready
           sleep 10
           
-          # Install MinIO client
-          wget https://dl.min.io/client/mc/release/linux-amd64/mc
-          chmod +x mc
-          
-          # Configure MinIO client and create bucket
-          ./mc alias set minio http://localhost:9000 minioadmin minioadmin
-          ./mc mb minio/tdc-photos || true
+          # Use MinIO client from Docker instead of downloading
+          # Configure MinIO and create bucket using docker exec
+          docker run --rm --network host \
+            -e MC_HOST_minio=http://minioadmin:minioadmin@localhost:9000 \
+            minio/mc:latest \
+            mb minio/tdc-photos --ignore-existing
       
       - name: Install dependencies
         working-directory: ./app
-        run: npm ci
+        run: |
+          # Skip Prisma postinstall to avoid binary downloads
+          PRISMA_SKIP_POSTINSTALL_GENERATE=true npm ci
       
       - name: Generate Prisma client
         working-directory: ./app
@@ -91,11 +98,38 @@ jobs:
         working-directory: ./app
         run: npm run build
       
+      - name: Wait for services
+        run: |
+          # Wait for PostgreSQL to be ready
+          until pg_isready -h localhost -p 5432; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+          
+          # Wait for Redis to be ready  
+          until redis-cli -h localhost -p 6379 ping; do
+            echo "Waiting for Redis..."
+            sleep 2
+          done
+          
+          # Wait for MinIO to be ready
+          until curl -f http://localhost:9000/minio/health/live; do
+            echo "Waiting for MinIO..."
+            sleep 2
+          done
+          
+          echo "All services are ready!"
+      
       - name: Start server in background
         working-directory: ./app
         run: |
           npm run dev &
-          sleep 10
+          SERVER_PID=$!
+          echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
+          
+          # Wait for server to start and be responsive
+          timeout 30 bash -c 'until curl -f http://localhost:4000/graphql -H "Content-Type: application/json" -d "{\"query\":\"{ hello }\"}" > /dev/null 2>&1; do sleep 1; done'
+          echo "Server is ready!"
         env:
           CI: true
       

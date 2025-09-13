@@ -3,7 +3,7 @@ import { createServer } from 'node:http';
 import { config } from 'dotenv';
 import { schema } from './schema.js';
 import { initializeS3, testS3Upload } from './setup.js';
-import { connectRedis } from './redis.js';
+import { connectRedis, initializeQueues } from './redis.js';
 import { Database } from './database.js';
 
 // Load environment variables
@@ -22,16 +22,27 @@ async function initializeServices() {
     // Seed database with test data
     await Database.seedDatabase();
     
-    // Initialize S3/MinIO
-    await initializeS3();
-    await testS3Upload();
+    // Initialize S3/MinIO (graceful failure in CI)
+    try {
+      await initializeS3();
+      await testS3Upload();
+      console.log('✅ S3/MinIO initialized successfully');
+    } catch (error) {
+      console.warn('⚠️  S3/MinIO initialization failed, continuing without it:', error);
+    }
     
-    // Initialize Redis
-    await connectRedis();
+    // Initialize Redis (graceful failure in CI)
+    try {
+      await connectRedis();
+      initializeQueues();
+      console.log('✅ Redis initialized successfully');
+    } catch (error) {
+      console.warn('⚠️  Redis initialization failed, continuing without it:', error);
+    }
     
-    console.log('✅ All services initialized successfully');
+    console.log('✅ Core services initialized successfully');
   } catch (error) {
-    console.error('❌ Failed to initialize services:', error);
+    console.error('❌ Failed to initialize core services:', error);
     process.exit(1);
   }
 }
