@@ -1,0 +1,67 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Vehicle {
+  id          String      @id @default(cuid())
+  make        String
+  model       String
+  year        Int
+  vin         String      @unique
+  mileage     Int?
+  condition   String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  // Relations
+  appraisals  Appraisal[]
+  photos      Photo[]
+  
+  @@map("vehicles")
+}
+
+model Appraisal {
+  id            String    @id @default(cuid())
+  vehicleId     String
+  estimatedValue Float
+  notes         String?
+  status        AppraisalStatus @default(PENDING)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relations
+  vehicle       Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  
+  @@map("appraisals")
+}
+
+model Photo {
+  id        String   @id @default(cuid())
+  vehicleId String
+  filename  String
+  url       String
+  uploadUrl String?  // Pre-signed upload URL
+  uploaded  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  
+  @@map("photos")
+}
+
+enum AppraisalStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}

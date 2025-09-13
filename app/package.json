@@ -1,0 +1,37 @@
+{
+  "name": "tdc-backend",
+  "version": "1.0.0",
+  "description": "TDC Backend GraphQL API",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "vitest",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:reset": "prisma migrate reset"
+  },
+  "dependencies": {
+    "@pothos/core": "^4.3.0",
+    "@pothos/plugin-prisma": "^4.3.0",
+    "graphql": "^16.8.1",
+    "graphql-yoga": "^5.7.0",
+    "@prisma/client": "^5.22.0",
+    "@aws-sdk/client-s3": "^3.654.0",
+    "@aws-sdk/s3-request-presigner": "^3.654.0",
+    "bullmq": "^5.13.2",
+    "redis": "^4.7.0",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.9",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.2",
+    "prisma": "^5.22.0",
+    "vitest": "^2.1.1"
+  }
+}
