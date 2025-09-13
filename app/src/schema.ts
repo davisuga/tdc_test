@@ -1,9 +1,17 @@
 import { builder } from './builder.js';
 import { generateUploadUrl } from './s3.js';
-import { Database, Vehicle, Photo } from './database.js';
+import { Database } from './database.js';
+import type { Vehicle, Photo } from './database.js';
+
+// Upload URL Response interface
+interface UploadUrlResponse {
+  uploadUrl: string;
+  photoId: string;
+  filename: string;
+}
 
 // Vehicle GraphQL Type
-const VehicleType = builder.objectRef<Vehicle>('Vehicle');
+const VehicleType = builder.objectRef<Vehicle & { photos: Photo[] }>('Vehicle');
 builder.objectType(VehicleType, {
   description: 'A vehicle for appraisal',
   fields: (t) => ({
@@ -12,9 +20,15 @@ builder.objectType(VehicleType, {
     model: t.exposeString('model'),
     year: t.exposeInt('year'),
     vin: t.exposeString('vin'),
+    mileage: t.exposeInt('mileage', { nullable: true }),
+    condition: t.exposeString('condition', { nullable: true }),
+    createdAt: t.field({
+      type: 'String',
+      resolve: (vehicle) => vehicle.createdAt.toISOString(),
+    }),
     photos: t.field({
       type: [PhotoType],
-      resolve: (vehicle) => vehicle.photos,
+      resolve: (vehicle) => vehicle.photos || [],
     }),
   }),
 });
@@ -27,7 +41,8 @@ builder.objectType(PhotoType, {
     id: t.exposeString('id'),
     vehicleId: t.exposeString('vehicleId'),
     filename: t.exposeString('filename'),
-    uploadUrl: t.exposeString('uploadUrl'),
+    url: t.exposeString('url'),
+    uploadUrl: t.exposeString('uploadUrl', { nullable: true }),
     uploaded: t.exposeBoolean('uploaded'),
     createdAt: t.field({
       type: 'String',
@@ -37,11 +52,12 @@ builder.objectType(PhotoType, {
 });
 
 // Upload URL Response Type
-const UploadUrlResponseType = builder.objectType('UploadUrlResponse', {
+const UploadUrlResponseType = builder.objectRef<UploadUrlResponse>('UploadUrlResponse');
+builder.objectType(UploadUrlResponseType, {
   fields: (t) => ({
-    uploadUrl: t.string({ description: 'Pre-signed S3 upload URL' }),
-    photoId: t.string({ description: 'Database ID of the photo record' }),
-    filename: t.string({ description: 'Generated filename for the photo' }),
+    uploadUrl: t.exposeString('uploadUrl', { description: 'Pre-signed S3 upload URL' }),
+    photoId: t.exposeString('photoId', { description: 'Database ID of the photo record' }),
+    filename: t.exposeString('filename', { description: 'Generated filename for the photo' }),
   }),
 });
 
@@ -59,7 +75,7 @@ builder.queryType({
     vehicles: t.field({
       type: [VehicleType],
       description: 'Get all vehicles',
-      resolve: () => Database.getAllVehicles(),
+      resolve: async () => await Database.getAllVehicles(),
     }),
     vehicle: t.field({
       type: VehicleType,
@@ -67,8 +83,8 @@ builder.queryType({
       args: {
         id: t.arg.string({ required: true }),
       },
-      resolve: (parent, { id }) => {
-        const vehicle = Database.getVehicle(id);
+      resolve: async (parent, { id }) => {
+        const vehicle = await Database.getVehicle(id);
         if (!vehicle) {
           throw new Error(`Vehicle with ID ${id} not found`);
         }
@@ -78,7 +94,7 @@ builder.queryType({
     photos: t.field({
       type: [PhotoType],
       description: 'Get all photos',
-      resolve: () => Database.getAllPhotos(),
+      resolve: async () => await Database.getAllPhotos(),
     }),
   }),
 });
@@ -100,7 +116,7 @@ builder.mutationType({
       resolve: async (parent, { vehicleId, fileType }) => {
         try {
           // Verify vehicle exists
-          const vehicle = Database.getVehicle(vehicleId);
+          const vehicle = await Database.getVehicle(vehicleId);
           if (!vehicle) {
             throw new Error(`Vehicle with ID ${vehicleId} not found`);
           }
@@ -114,11 +130,13 @@ builder.mutationType({
           const uploadUrl = await generateUploadUrl(key, fileType);
           
           // Save photo reference to database
-          const photo = Database.createPhoto({
+          const photo = await Database.createPhoto({
             vehicleId,
             filename,
+            url: `https://${process.env.S3_BUCKET || 'tdc-photos'}.s3.amazonaws.com/${key}`,
             uploadUrl,
             uploaded: false,
+            vehicle: { connect: { id: vehicleId } },
           });
           
           console.log(`📸 Generated upload URL for vehicle ${vehicleId}: ${key}, photoId: ${photo.id}`);
@@ -140,8 +158,8 @@ builder.mutationType({
       args: {
         photoId: t.arg.string({ required: true, description: 'ID of the photo' }),
       },
-      resolve: (parent, { photoId }) => {
-        const photo = Database.updatePhoto(photoId, { uploaded: true });
+      resolve: async (parent, { photoId }) => {
+        const photo = await Database.updatePhoto(photoId, { uploaded: true });
         if (!photo) {
           throw new Error(`Photo with ID ${photoId} not found`);
         }
@@ -156,13 +174,12 @@ builder.mutationType({
         model: t.arg.string({ required: true }),
         year: t.arg.int({ required: true }),
         vin: t.arg.string({ required: true }),
+        mileage: t.arg.int({ required: false }),
+        condition: t.arg.string({ required: false }),
       },
-      resolve: (parent, args) => {
-        const vehicleId = `vehicle_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        return Database.createVehicle({
-          id: vehicleId,
-          ...args,
-        });
+      resolve: async (parent, args) => {
+        const vehicle = await Database.createVehicle(args);
+        return await Database.getVehicle(vehicle.id) as any;
       },
     }),
   }),

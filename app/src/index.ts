@@ -4,6 +4,7 @@ import { config } from 'dotenv';
 import { schema } from './schema.js';
 import { initializeS3, testS3Upload } from './setup.js';
 import { connectRedis } from './redis.js';
+import { Database } from './database.js';
 
 // Load environment variables
 config();
@@ -14,6 +15,12 @@ const PORT = process.env.PORT || 4000;
 async function initializeServices() {
   try {
     console.log('🔧 Initializing services...');
+    
+    // Connect to database (PostgreSQL or in-memory fallback)
+    await Database.connect();
+    
+    // Seed database with test data
+    await Database.seedDatabase();
     
     // Initialize S3/MinIO
     await initializeS3();
@@ -49,5 +56,18 @@ async function startServer() {
     console.log(`📊 GraphiQL interface available at http://localhost:${PORT}/graphql`);
   });
 }
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  console.log('🛑 Shutting down gracefully...');
+  await Database.disconnect();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  console.log('🛑 Shutting down gracefully...');
+  await Database.disconnect();
+  process.exit(0);
+});
 
 startServer().catch(console.error);
