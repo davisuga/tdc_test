@@ -11,7 +11,9 @@ export interface VehicleAppraisalFormProps {
   onVinChange?: (vin: string) => void;
   onAnalyze?: () => void;
   onUpload?: (files: FileList) => void;
+  onNotesChange?: (notes: string) => void;
   vin?: string;
+  notes?: string;
   photos?: Photo[];
   uploadProgress?: {
     current: number;
@@ -24,7 +26,9 @@ export function VehicleAppraisalForm({
   onVinChange,
   onAnalyze,
   onUpload,
+  onNotesChange,
   vin = "",
+  notes = "",
   photos = [],
   uploadProgress,
   isUploading = false,
@@ -41,13 +45,22 @@ export function VehicleAppraisalForm({
         </div>
       </div>
 
-      <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+      <div className="flex  flex-wrap items-end gap-4 px-4 py-3">
         <Input
+        className="max-w-[480px]"
           placeholder="Enter VIN"
           value={vin}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             onVinChange?.(e.target.value)
           }
+        />
+        <textarea
+          placeholder="Notes about the vehicle (optional)"
+          value={notes}
+          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+            onNotesChange?.(e.target.value)
+          }
+          className="mt-2 w-full rounded-md border p-4"
         />
       </div>
 

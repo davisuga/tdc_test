@@ -8,5 +8,11 @@
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "dependencies": {
+    "@pothos/plugin-prisma": "^4.11.0",
+    "graphql": "^16.11.0",
+    "graphql-yoga": "^5.15.2",
+    "prisma": "^6.16.1"
   }
 }

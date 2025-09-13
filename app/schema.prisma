@@ -1,0 +1,60 @@
+datasource db {
+    provider = "postgresql"
+    url      = env("DB_URL")
+}
+
+generator pothos {
+  provider = "prisma-pothos-types"
+  clientOutput = "./generated/prisma"
+  output = "./pothos-types.ts"
+}
+generator client {
+  provider = "prisma-client"
+  output   = "generated/prisma"
+}
+
+model VehicleAssessment {
+    id               String         @id @default(cuid())
+    vehicleDetails   VehicleDetails @relation(fields: [vehicleDetailsId], references: [id])
+    vehicleDetailsId String
+
+    visualScore      Int
+    maxScore         Int
+    scoreDescription String
+
+    conditionIssues ConditionIssue[]
+
+    marketValueRange   String
+    tradeInValue       String
+    tradeInDescription String
+
+    aiConfidence            Int
+    aiConfidenceDescription String
+
+
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model VehicleDetails {
+    id      String @id @default(cuid())
+    make    String
+    model   String
+    year    Int
+    mileage String
+    vin     String
+
+    VehicleAssessment VehicleAssessment[]
+}
+
+model ConditionIssue {
+    id          String @id @default(cuid())
+    issueKey    String // e.g. "scratches", "interior"
+    title       String
+    description String
+    icon        String // store the icon name, e.g. "Car", "Armchair"
+
+    vehicleAssessment   VehicleAssessment @relation(fields: [vehicleAssessmentId], references: [id])
+    vehicleAssessmentId String
+}
