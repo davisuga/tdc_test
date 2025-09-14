@@ -5,18 +5,17 @@ import PrismaPlugin from "@pothos/plugin-prisma";
 // customized as described above.
 // Using a type only import will help avoid issues with undeclared
 // exports in esm mode
-import type PrismaTypes from "./pothos-types";
+import type PrismaTypes from "./generated/pothos-types";
 import { S3Client } from "bun";
+import { runBackgroundAssessment } from "./agents/vehicle-assessment/background-assessment";
 
 const prisma = new PrismaClient({});
 
 const s3Client = new S3Client({
   bucket: "tdc-photos",
-  endpoint: process.env.S3_ENDPOINT || "s3.us-west-001.backblazeb2.com"// Backblaze B2 default
+  endpoint: process.env.S3_ENDPOINT || "s3.us-west-001.backblazeb2.com", // Backblaze B2 default
   // Credentials read from env: S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY
-  
 });
-
 
 export const builder = new SchemaBuilder<{
   PrismaTypes: PrismaTypes;
@@ -34,6 +33,17 @@ export const builder = new SchemaBuilder<{
     onUnusedQuery: process.env.NODE_ENV === "production" ? null : "warn",
   },
 });
+builder.prismaObject("VinSubmission", {
+  name: "VinSubmission",
+  fields: (t) => ({
+    id: t.exposeID("id"),
+    vin: t.exposeString("vin"),
+    description: t.exposeString("description", { nullable: true }),
+    mileage: t.exposeInt("mileage", { nullable: true }),
+    s3Paths: t.exposeStringList("s3Paths"),
+    vehicleAssessment: t.relation("vehicleAssessment"),
+  }),
+});
 builder.prismaObject("VehicleAssessment", {
   name: "VehicleAssessment",
   fields: (t) => ({
@@ -42,6 +52,9 @@ builder.prismaObject("VehicleAssessment", {
     conditionIssues: t.relation("conditionIssues"),
     marketValueRange: t.exposeString("marketValueRange"),
     tradeInValue: t.exposeString("tradeInValue"),
+    visualScore: t.exposeInt("visualScore"),
+    maxScore: t.exposeInt("maxScore"),
+    scoreDescription: t.exposeString("scoreDescription"),
     tradeInDescription: t.exposeString("tradeInDescription"),
     aiConfidence: t.exposeInt("aiConfidence"),
     aiConfidenceDescription: t.exposeString("aiConfidenceDescription"),
@@ -86,8 +99,21 @@ builder.queryType({
         });
       },
     }),
+    getSubmission: t.prismaField({
+      type: "VinSubmission",
+      args: {
+        id: t.arg.id({ required: true }),
+      },
+      resolve: async (query, root, args, context, info) => {
+        return prisma.vinSubmission.findUnique({
+          where: { id: args.id },
+          ...query,
+        });
+      },
+    }),
   }),
 });
+
 const SignedUrl = builder.objectRef<{ url: string }>("SignedUrl");
 SignedUrl.implement({
   fields: (t) => ({
@@ -114,7 +140,6 @@ builder.mutationType({
         const urls: string[] = filenames.map((filename) => {
           // Extract extension (including dot)
 
-
           const randomPath = `uploads/${crypto.randomUUID()}/${filename}`;
           console.log("Generating presigned URL for", randomPath);
           return s3Client.presign(randomPath, {
@@ -123,6 +148,57 @@ builder.mutationType({
           });
         });
         return urls.map((url) => ({ url }));
+      },
+    }),
+    createVinSubmission: t.prismaField({
+      type: "VinSubmission",
+      args: {
+        vin: t.arg.string({ required: true }),
+        description: t.arg.string({ required: false }),
+        mileage: t.arg.int({ required: false }),
+        s3Paths: t.arg.stringList({ required: true }),
+      },
+      resolve: async (query, root, args, context, info) => {
+        const { vin, description, mileage, s3Paths } = args;
+
+        // Validate VIN format (basic validation)
+        if (!vin || vin.trim().length === 0) {
+          throw new Error("VIN is required");
+        }
+
+        // Validate s3Paths
+        if (!Array.isArray(s3Paths)) {
+          throw new Error("s3Paths must be an array");
+        }
+
+        // Create the submission first
+        const submission = await prisma.vinSubmission.create({
+          ...query,
+          data: {
+            vin: vin.trim(),
+            description: description?.trim() || null,
+            mileage: mileage || null,
+            s3Paths,
+          },
+        });
+
+        // Run background assessment asynchronously
+        // Don't await this - let it run in the background
+        runBackgroundAssessment(
+          submission.id,
+          vin.trim(),
+          mileage || 0,
+          description || '',
+          s3Paths
+        ).catch((error) => {
+          console.error(`Background assessment failed for submission ${submission.id}:`, error);
+          // In a production system, you might want to:
+          // - Store the error in the database
+          // - Send notifications to administrators
+          // - Retry the assessment later
+        });
+
+        return submission;
       },
     }),
   }),

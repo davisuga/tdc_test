@@ -16,13 +16,13 @@ export interface PhotoGridProps {
 export function PhotoGrid({ photos, className }: PhotoGridProps) {
   return (
     <div className={cn(
-      "grid grid-cols-[repeat(auto-fit,minmax(158px,1fr))] gap-3 p-4",
+      "flex flex-1 flex-wrap gap-3 p-4 ",
       className
     )}>
       {photos.map((photo) => (
         <div key={photo.id} className="flex flex-col gap-3">
           <div
-            className="w-full max-w-[200px] h-[200px] bg-center bg-no-repeat bg-cover rounded-lg"
+            className="w-[200px] h-[200px] bg-center bg-no-repeat bg-cover rounded-lg"
             style={{ backgroundImage: `url("${photo.url}")` }}
             role="img"
             aria-label={photo.alt || "Vehicle photo"}

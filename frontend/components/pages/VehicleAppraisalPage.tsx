@@ -1,28 +1,35 @@
 // components/pages/VehicleAppraisalPage.tsx
 import * as React from "react";
+import { useNavigate } from "react-router";
 import { PageLayout } from "components/templates/PageLayout";
 import { VehicleAppraisalForm } from "components/organisms/VehicleAppraisalForm";
 import { type Photo } from "components/molecules/PhotoGrid";
 import { usePresignedUrls } from "hooks/usePresignedUrls";
+import { useCreateVinSubmission } from "hooks/useCreateSubmission";
 
 export function VehicleAppraisalPage() {
+  const navigate = useNavigate();
   // Local state management
   const [vin, setVin] = React.useState("");
   const [notes, setNotes] = React.useState("");
+  const [mileage, setMileage] = React.useState("");
   // localFiles now stores file + preview metadata so we can derive photos without a separate photos state
   type LocalFile = { id: string; file: File; previewUrl: string; alt: string };
   const [localFiles, setLocalFiles] = React.useState<LocalFile[]>([]);
-  const [uploadedMeta, setUploadedMeta] = React.useState<
-    { url: string; filename?: string }[]
-  >([]);
+
   const [uploadProgress, setUploadProgress] = React.useState<
     { current: number; total: number } | undefined
   >(undefined);
   const [isUploading, setIsUploading] = React.useState(false);
   const { mutateAsync: createPresignedUrls, isPending } = usePresignedUrls();
+  const { mutateAsync: createVinSubmission, isPending: isSubmitting } = useCreateVinSubmission();
   // Handlers
   const handleVinChange = (newVin: string) => {
     setVin(newVin);
+  };
+
+  const handleMileageChange = (newMileage: string) => {
+    setMileage(newMileage);
   };
 
   const handleNotesChange = (newNotes: string) => {
@@ -48,14 +55,23 @@ export function VehicleAppraisalPage() {
     const submitForAnalysis = async (
       paths: string[],
       vinToSubmit: string,
-      notesToSubmit?: string
+      notesToSubmit?: string,
+      mileageToSubmit?: string
     ) => {
-      // TODO: replace with real analysis submission API
-      console.log("Submitting for analysis", {
-        vin: vinToSubmit,
-        paths,
-        notes: notesToSubmit,
-      });
+      try {
+        const submission = await createVinSubmission({
+          vin: vinToSubmit,
+          description: notesToSubmit || undefined,
+          mileage: mileageToSubmit && mileageToSubmit.length > 0 ? Number(mileageToSubmit) : undefined,
+          s3Paths: paths,
+        });
+        
+        // Navigate to submission page with the returned ID
+        navigate(`/submissions/${submission!.id}`);
+      } catch (error) {
+        console.error("Failed to create submission:", error);
+        // TODO: Show error message to user
+      }
     };
 
     // If we have local files, upload them first
@@ -119,8 +135,8 @@ export function VehicleAppraisalPage() {
 
 
         // Submit for analysis with combined paths and notes
-        const pathsToSubmit = uploadedUrls.map((u) => new URL(u).pathname);
-        await submitForAnalysis(pathsToSubmit, vin, notes);
+  const pathsToSubmit = uploadedUrls.map((u) => new URL(u).pathname);
+  await submitForAnalysis(pathsToSubmit, vin, notes, mileage);
       } catch (error) {
         console.error("One or more uploads failed:", error);
       } finally {
@@ -131,7 +147,7 @@ export function VehicleAppraisalPage() {
     }
     else {
       // No files to upload; still submit VIN + notes if provided
-      await submitForAnalysis([], vin, notes);
+      await submitForAnalysis([], vin, notes, mileage);
     }
   };
 
@@ -143,13 +159,16 @@ export function VehicleAppraisalPage() {
 
   return (
     <PageLayout>
-      <VehicleAppraisalForm
+        <VehicleAppraisalForm
         vin={vin}
+        mileage={mileage}
         notes={notes}
         photos={photos}
         uploadProgress={uploadProgress}
         isUploading={isUploading}
+        isSubmitting={isSubmitting}
         onVinChange={handleVinChange}
+        onMileageChange={handleMileageChange}
         onUpload={handleUpload}
         onNotesChange={handleNotesChange}
         onAnalyze={handleAnalyze}

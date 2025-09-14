@@ -9,10 +9,12 @@ import { ProgressSection } from "components/molecules/ProgressSection";
 
 export interface VehicleAppraisalFormProps {
   onVinChange?: (vin: string) => void;
+  onMileageChange?: (mileage: string) => void;
   onAnalyze?: () => void;
   onUpload?: (files: FileList) => void;
   onNotesChange?: (notes: string) => void;
   vin?: string;
+  mileage?: string;
   notes?: string;
   photos?: Photo[];
   uploadProgress?: {
@@ -20,18 +22,22 @@ export interface VehicleAppraisalFormProps {
     total: number;
   };
   isUploading?: boolean;
+  isSubmitting?: boolean;
 }
 
 export function VehicleAppraisalForm({
   onVinChange,
+  onMileageChange,
   onAnalyze,
   onUpload,
   onNotesChange,
   vin = "",
+  mileage = "",
   notes = "",
   photos = [],
   uploadProgress,
   isUploading = false,
+  isSubmitting = false,
 }: VehicleAppraisalFormProps) {
   return (
     <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
@@ -45,13 +51,22 @@ export function VehicleAppraisalForm({
         </div>
       </div>
 
-      <div className="flex  flex-wrap items-end gap-4 px-4 py-3">
+      <div className="flex flex-wrap items-end gap-4 px-4 py-3">
         <Input
-        className="max-w-[480px]"
+          className="max-w-[240px]"
           placeholder="Enter VIN"
           value={vin}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             onVinChange?.(e.target.value)
+          }
+        />
+        <Input
+          className="max-w-[240px]"
+          placeholder="Mileage"
+          type="number"
+          value={mileage}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            onMileageChange?.(e.target.value)
           }
         />
         <textarea
@@ -80,8 +95,8 @@ export function VehicleAppraisalForm({
       <UploadArea onUpload={onUpload} />
 
       <div className="flex px-4 py-3 justify-start">
-        <Button disabled={vin.length === 0} onClick={onAnalyze}>
-          Analyze Vehicle
+        <Button disabled={vin.length === 0 || isUploading || isSubmitting} onClick={onAnalyze}>
+          {isSubmitting ? "Submitting..." : "Analyze Vehicle"}
         </Button>
       </div>
     </div>

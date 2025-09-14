@@ -9,10 +9,6 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export function loader({ context }: Route.LoaderArgs) {
-  return { message: "Hello from Vercel" };
-}
-
 export default function Home({ loaderData }: Route.ComponentProps) {
   return <VehicleAppraisalPage />;
 }

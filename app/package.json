@@ -10,9 +10,12 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@ai-sdk/google": "^2.0.14",
     "@pothos/plugin-prisma": "^4.11.0",
+    "ai": "^5.0.44",
     "graphql": "^16.11.0",
     "graphql-yoga": "^5.15.2",
-    "prisma": "^6.16.1"
+    "prisma": "^6.16.1",
+    "zod": "^4.1.8"
   }
 }
