@@ -10,7 +10,9 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@pothos/core": "^4.9.1",
     "@pothos/plugin-prisma": "^4.11.0",
+    "@prisma/client": "^6.16.1",
     "graphql": "^16.11.0",
     "graphql-yoga": "^5.15.2",
     "prisma": "^6.16.1"

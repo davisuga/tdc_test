@@ -1,5 +1,6 @@
 // components/pages/VehicleAppraisalPage.tsx
 import * as React from "react";
+import { useNavigate, useSearchParams } from "react-router";
 import { PageLayout } from "components/templates/PageLayout";
 import { VehicleAppraisalForm } from "components/organisms/VehicleAppraisalForm";
 import { type Photo } from "components/molecules/PhotoGrid";
@@ -7,9 +8,21 @@ import { usePresignedUrls } from "hooks/usePresignedUrls";
 import { useCreateVinSubmission } from "hooks/useCreateVinSubmission";
 
 export function VehicleAppraisalPage() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  
+  // Check if we have a submission ID in URL parameters  
+  const submissionId = searchParams.get('submissionId');
+  const isInProgress = submissionId !== null;
+
   // Local state management
   const [vin, setVin] = React.useState("");
+  const [mileage, setMileage] = React.useState("");
   const [notes, setNotes] = React.useState("");
+  
+  // Cache key for localStorage
+  const cacheKey = `vehicle-appraisal-${submissionId || 'new'}`;
+  
   // localFiles now stores file + preview metadata so we can derive photos without a separate photos state
   type LocalFile = { id: string; file: File; previewUrl: string; alt: string };
   const [localFiles, setLocalFiles] = React.useState<LocalFile[]>([]);
@@ -22,9 +35,50 @@ export function VehicleAppraisalPage() {
   const [isUploading, setIsUploading] = React.useState(false);
   const { mutateAsync: createPresignedUrls, isPending } = usePresignedUrls();
   const { mutateAsync: createVinSubmission, isPending: isSubmitting } = useCreateVinSubmission();
+
+  // Load cached data on mount
+  React.useEffect(() => {
+    const cachedData = localStorage.getItem(cacheKey);
+    if (cachedData) {
+      try {
+        const { vin: cachedVin, mileage: cachedMileage, notes: cachedNotes, photos } = JSON.parse(cachedData);
+        if (cachedVin) setVin(cachedVin);
+        if (cachedMileage) setMileage(cachedMileage);
+        if (cachedNotes) setNotes(cachedNotes);
+        
+        // Restore photos from cache URLs (these are blob URLs, might not work after page refresh)
+        if (photos?.length > 0) {
+          const restoredFiles = photos.map((photo: any) => ({
+            id: photo.id,
+            file: null, // File object cannot be serialized, so we lose it
+            previewUrl: photo.url,
+            alt: photo.alt,
+          }));
+          setLocalFiles(restoredFiles);
+        }
+      } catch (error) {
+        console.error('Failed to parse cached data:', error);
+      }
+    }
+  }, [cacheKey]);
+
+  // Cache data when it changes
+  React.useEffect(() => {
+    const dataToCache = {
+      vin,
+      mileage,
+      notes,
+      photos: localFiles.map(f => ({ id: f.id, url: f.previewUrl, alt: f.alt }))
+    };
+    localStorage.setItem(cacheKey, JSON.stringify(dataToCache));
+  }, [vin, mileage, notes, localFiles, cacheKey]);
   // Handlers
   const handleVinChange = (newVin: string) => {
     setVin(newVin);
+  };
+
+  const handleMileageChange = (newMileage: string) => {
+    setMileage(newMileage);
   };
 
   const handleNotesChange = (newNotes: string) => {
@@ -50,16 +104,27 @@ export function VehicleAppraisalPage() {
     const submitForAnalysis = async (
       paths: string[],
       vinToSubmit: string,
+      mileageToSubmit?: number,
       notesToSubmit?: string
     ) => {
       try {
         const result = await createVinSubmission({
           vin: vinToSubmit,
           description: notesToSubmit || undefined,
+          mileage: mileageToSubmit || undefined,
           s3Paths: paths,
         });
         
         console.log("VIN submission created successfully:", result);
+        
+        // Add submission ID to URL parameters to indicate it's in progress
+        const newSubmissionId = result.createVinSubmission.id;
+        navigate(`?submissionId=${newSubmissionId}`, { replace: true });
+        
+        // Clear cache for the 'new' state and create cache for this submission
+        localStorage.removeItem('vehicle-appraisal-new');
+        
+        // TODO: Start background processing of VIN data and market comparison
         // TODO: Handle success (e.g., show success message, redirect, etc.)
       } catch (error) {
         console.error("Failed to submit VIN data:", error);
@@ -129,7 +194,7 @@ export function VehicleAppraisalPage() {
 
         // Submit for analysis with combined paths and notes
         const pathsToSubmit = uploadedUrls.map((u) => new URL(u).pathname);
-        await submitForAnalysis(pathsToSubmit, vin, notes);
+        await submitForAnalysis(pathsToSubmit, vin, mileage ? parseInt(mileage) : undefined, notes);
       } catch (error) {
         console.error("One or more uploads failed:", error);
       } finally {
@@ -140,7 +205,7 @@ export function VehicleAppraisalPage() {
     }
     else {
       // No files to upload; still submit VIN + notes if provided
-      await submitForAnalysis([], vin, notes);
+      await submitForAnalysis([], vin, mileage ? parseInt(mileage) : undefined, notes);
     }
   };
 
@@ -152,14 +217,30 @@ export function VehicleAppraisalPage() {
 
   return (
     <PageLayout>
+      {isInProgress && (
+        <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
+          <div className="flex">
+            <div className="ml-3">
+              <p className="text-sm text-blue-700">
+                🔄 Vehicle submission in progress... Analyzing VIN and comparing market prices.
+              </p>
+              <p className="text-xs text-blue-600 mt-1">
+                Submission ID: {submissionId}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       <VehicleAppraisalForm
         vin={vin}
+        mileage={mileage}
         notes={notes}
         photos={photos}
         uploadProgress={uploadProgress}
         isUploading={isUploading}
-        isSubmitting={isSubmitting}
+        isSubmitting={isSubmitting || isInProgress}
         onVinChange={handleVinChange}
+        onMileageChange={handleMileageChange}
         onUpload={handleUpload}
         onNotesChange={handleNotesChange}
         onAnalyze={handleAnalyze}

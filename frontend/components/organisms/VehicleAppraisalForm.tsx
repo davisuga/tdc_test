@@ -9,10 +9,12 @@ import { ProgressSection } from "components/molecules/ProgressSection";
 
 export interface VehicleAppraisalFormProps {
   onVinChange?: (vin: string) => void;
+  onMileageChange?: (mileage: string) => void;
   onAnalyze?: () => void;
   onUpload?: (files: FileList) => void;
   onNotesChange?: (notes: string) => void;
   vin?: string;
+  mileage?: string;
   notes?: string;
   photos?: Photo[];
   uploadProgress?: {
@@ -25,10 +27,12 @@ export interface VehicleAppraisalFormProps {
 
 export function VehicleAppraisalForm({
   onVinChange,
+  onMileageChange,
   onAnalyze,
   onUpload,
   onNotesChange,
   vin = "",
+  mileage = "",
   notes = "",
   photos = [],
   uploadProgress,
@@ -47,14 +51,25 @@ export function VehicleAppraisalForm({
         </div>
       </div>
 
-      <div className="flex  flex-wrap items-end gap-4 px-4 py-3">
+      <div className="flex flex-wrap items-end gap-4 px-4 py-3">
         <Input
-        className="max-w-[480px]"
+          className="max-w-[240px]"
           placeholder="Enter VIN"
           value={vin}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             onVinChange?.(e.target.value)
           }
+          disabled={isSubmitting}
+        />
+        <Input
+          className="max-w-[240px]"
+          placeholder="Mileage"
+          type="number"
+          value={mileage}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            onMileageChange?.(e.target.value)
+          }
+          disabled={isSubmitting}
         />
         <textarea
           placeholder="Notes about the vehicle (optional)"
@@ -63,6 +78,7 @@ export function VehicleAppraisalForm({
             onNotesChange?.(e.target.value)
           }
           className="mt-2 w-full rounded-md border p-4"
+          disabled={isSubmitting}
         />
       </div>
 
@@ -79,7 +95,7 @@ export function VehicleAppraisalForm({
           )}
         </>
       )}
-      <UploadArea onUpload={onUpload} />
+      <UploadArea onUpload={onUpload} disabled={isSubmitting} />
 
       <div className="flex px-4 py-3 justify-start">
         <Button disabled={vin.length === 0 || isUploading || isSubmitting} onClick={onAnalyze}>

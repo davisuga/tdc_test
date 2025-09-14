@@ -9,6 +9,7 @@ export interface UploadAreaProps {
   description?: string
   buttonText?: string
   className?: string
+  disabled?: boolean
 }
 
 
@@ -17,34 +18,43 @@ export function UploadArea({
   title = "Drag and drop photos here",
   description = "Upload 4-6 photos of the vehicle, including front, rear, interior, and any damage areas.",
   buttonText = "Upload Photos",
-  className
+  className,
+  disabled = false
 }: UploadAreaProps) {
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = React.useState(false)
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
-    setIsDragging(true)
+    if (!disabled) {
+      setIsDragging(true)
+    }
   }
 
   const handleDragLeave = () => {
-    setIsDragging(false)
+    if (!disabled) {
+      setIsDragging(false)
+    }
   }
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
-    setIsDragging(false)
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      onUpload?.(e.dataTransfer.files)
+    if (!disabled) {
+      setIsDragging(false)
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        onUpload?.(e.dataTransfer.files)
+      }
     }
   }
 
   const handleClick = () => {
-    fileInputRef.current?.click()
+    if (!disabled) {
+      fileInputRef.current?.click()
+    }
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
+    if (!disabled && e.target.files && e.target.files.length > 0) {
       onUpload?.(e.target.files)
     }
   }
@@ -57,6 +67,7 @@ export function UploadArea({
         onDrop={handleDrop}
         className={cn(
           "flex flex-col items-center gap-6 rounded-lg border-2 border-dashed px-6 py-14 transition-colors",
+          disabled ? "border-gray-300 bg-gray-50 opacity-50" : 
           isDragging ? "border-[#1172d4] bg-[#f0f8ff]" : "border-[#dbe0e6]"
         )}
       >
@@ -68,7 +79,7 @@ export function UploadArea({
             {description}
           </p>
         </div>
-        <Button variant="secondary" onClick={handleClick}>
+        <Button variant="secondary" onClick={handleClick} disabled={disabled}>
           {buttonText}
         </Button>
         <input
@@ -78,6 +89,7 @@ export function UploadArea({
           accept="image/*"
           onChange={handleFileChange}
           className="hidden"
+          disabled={disabled}
         />
       </div>
     </div>

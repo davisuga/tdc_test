@@ -899,28 +899,60 @@ export const $ = <Type extends GraphQLVariableType, Name extends string>(name: N
 };
 type ZEUS_INTERFACES = never
 export type ScalarCoders = {
+	DateTime?: ScalarResolver;
 	ID?: ScalarResolver;
 }
 type ZEUS_UNIONS = never
 
 export type ValueTypes = {
-    ["Mutation"]: AliasType<{
-createVinSubmission?: [{	description?: string | undefined | null | Variable<any, string>,	s3Paths: Array<string> | Variable<any, string>,	vin: string | Variable<any, string>},ValueTypes["VinSubmission"]],
+    ["ConditionIssue"]: AliasType<{
+	description?:boolean | `@${string}`,
+	icon?:boolean | `@${string}`,
+	id?:boolean | `@${string}`,
+	issueKey?:boolean | `@${string}`,
+	title?:boolean | `@${string}`,
+	vehicleAssessment?:ValueTypes["VehicleAssessment"],
+		__typename?: boolean | `@${string}`
+}>;
+	["DateTime"]:unknown;
+	["Mutation"]: AliasType<{
+createVinSubmission?: [{	description?: string | undefined | null | Variable<any, string>,	mileage?: number | undefined | null | Variable<any, string>,	s3Paths: Array<string> | Variable<any, string>,	vin: string | Variable<any, string>},ValueTypes["VinSubmission"]],
 generateUploadUrls?: [{	filenames: Array<string> | Variable<any, string>},ValueTypes["SignedUrl"]],
 		__typename?: boolean | `@${string}`
 }>;
 	["Query"]: AliasType<{
-	hello?:boolean | `@${string}`,
+vehicleAssessment?: [{	id: ValueTypes["ID"] | Variable<any, string>},ValueTypes["VehicleAssessment"]],
 		__typename?: boolean | `@${string}`
 }>;
 	["SignedUrl"]: AliasType<{
 	url?:boolean | `@${string}`,
 		__typename?: boolean | `@${string}`
 }>;
+	["VehicleAssessment"]: AliasType<{
+	aiConfidence?:boolean | `@${string}`,
+	aiConfidenceDescription?:boolean | `@${string}`,
+	conditionIssues?:ValueTypes["ConditionIssue"],
+	id?:boolean | `@${string}`,
+	marketValueRange?:boolean | `@${string}`,
+	tradeInDescription?:boolean | `@${string}`,
+	tradeInValue?:boolean | `@${string}`,
+	vehicleDetails?:ValueTypes["VehicleDetails"],
+		__typename?: boolean | `@${string}`
+}>;
+	["VehicleDetails"]: AliasType<{
+	id?:boolean | `@${string}`,
+	make?:boolean | `@${string}`,
+	model?:boolean | `@${string}`,
+	vehicleAssessment?:ValueTypes["VehicleAssessment"],
+	vin?:boolean | `@${string}`,
+	year?:boolean | `@${string}`,
+		__typename?: boolean | `@${string}`
+}>;
 	["VinSubmission"]: AliasType<{
 	createdAt?:boolean | `@${string}`,
 	description?:boolean | `@${string}`,
 	id?:boolean | `@${string}`,
+	mileage?:boolean | `@${string}`,
 	s3Paths?:boolean | `@${string}`,
 	updatedAt?:boolean | `@${string}`,
 	vin?:boolean | `@${string}`,
@@ -930,23 +962,54 @@ generateUploadUrls?: [{	filenames: Array<string> | Variable<any, string>},ValueT
   }
 
 export type ResolverInputTypes = {
-    ["Mutation"]: AliasType<{
-createVinSubmission?: [{	description?: string | undefined | null,	s3Paths: Array<string>,	vin: string},ResolverInputTypes["VinSubmission"]],
+    ["ConditionIssue"]: AliasType<{
+	description?:boolean | `@${string}`,
+	icon?:boolean | `@${string}`,
+	id?:boolean | `@${string}`,
+	issueKey?:boolean | `@${string}`,
+	title?:boolean | `@${string}`,
+	vehicleAssessment?:ResolverInputTypes["VehicleAssessment"],
+		__typename?: boolean | `@${string}`
+}>;
+	["DateTime"]:unknown;
+	["Mutation"]: AliasType<{
+createVinSubmission?: [{	description?: string | undefined | null,	mileage?: number | undefined | null,	s3Paths: Array<string>,	vin: string},ResolverInputTypes["VinSubmission"]],
 generateUploadUrls?: [{	filenames: Array<string>},ResolverInputTypes["SignedUrl"]],
 		__typename?: boolean | `@${string}`
 }>;
 	["Query"]: AliasType<{
-	hello?:boolean | `@${string}`,
+vehicleAssessment?: [{	id: ResolverInputTypes["ID"]},ResolverInputTypes["VehicleAssessment"]],
 		__typename?: boolean | `@${string}`
 }>;
 	["SignedUrl"]: AliasType<{
 	url?:boolean | `@${string}`,
 		__typename?: boolean | `@${string}`
 }>;
+	["VehicleAssessment"]: AliasType<{
+	aiConfidence?:boolean | `@${string}`,
+	aiConfidenceDescription?:boolean | `@${string}`,
+	conditionIssues?:ResolverInputTypes["ConditionIssue"],
+	id?:boolean | `@${string}`,
+	marketValueRange?:boolean | `@${string}`,
+	tradeInDescription?:boolean | `@${string}`,
+	tradeInValue?:boolean | `@${string}`,
+	vehicleDetails?:ResolverInputTypes["VehicleDetails"],
+		__typename?: boolean | `@${string}`
+}>;
+	["VehicleDetails"]: AliasType<{
+	id?:boolean | `@${string}`,
+	make?:boolean | `@${string}`,
+	model?:boolean | `@${string}`,
+	vehicleAssessment?:ResolverInputTypes["VehicleAssessment"],
+	vin?:boolean | `@${string}`,
+	year?:boolean | `@${string}`,
+		__typename?: boolean | `@${string}`
+}>;
 	["VinSubmission"]: AliasType<{
 	createdAt?:boolean | `@${string}`,
 	description?:boolean | `@${string}`,
 	id?:boolean | `@${string}`,
+	mileage?:boolean | `@${string}`,
 	s3Paths?:boolean | `@${string}`,
 	updatedAt?:boolean | `@${string}`,
 	vin?:boolean | `@${string}`,
@@ -961,22 +1024,50 @@ generateUploadUrls?: [{	filenames: Array<string>},ResolverInputTypes["SignedUrl"
   }
 
 export type ModelTypes = {
-    ["Mutation"]: {
+    ["ConditionIssue"]: {
+		description?: string | undefined | null,
+	icon?: string | undefined | null,
+	id?: ModelTypes["ID"] | undefined | null,
+	issueKey?: string | undefined | null,
+	title?: string | undefined | null,
+	vehicleAssessment?: ModelTypes["VehicleAssessment"] | undefined | null
+};
+	["DateTime"]:any;
+	["Mutation"]: {
 		createVinSubmission?: ModelTypes["VinSubmission"] | undefined | null,
 	generateUploadUrls?: Array<ModelTypes["SignedUrl"]> | undefined | null
 };
 	["Query"]: {
-		hello?: string | undefined | null
+		vehicleAssessment?: ModelTypes["VehicleAssessment"] | undefined | null
 };
 	["SignedUrl"]: {
 		url?: string | undefined | null
 };
+	["VehicleAssessment"]: {
+		aiConfidence?: number | undefined | null,
+	aiConfidenceDescription?: string | undefined | null,
+	conditionIssues?: Array<ModelTypes["ConditionIssue"]> | undefined | null,
+	id?: ModelTypes["ID"] | undefined | null,
+	marketValueRange?: string | undefined | null,
+	tradeInDescription?: string | undefined | null,
+	tradeInValue?: string | undefined | null,
+	vehicleDetails?: ModelTypes["VehicleDetails"] | undefined | null
+};
+	["VehicleDetails"]: {
+		id?: ModelTypes["ID"] | undefined | null,
+	make?: string | undefined | null,
+	model?: string | undefined | null,
+	vehicleAssessment?: Array<ModelTypes["VehicleAssessment"]> | undefined | null,
+	vin?: string | undefined | null,
+	year?: number | undefined | null
+};
 	["VinSubmission"]: {
-		createdAt?: string | undefined | null,
+		createdAt?: ModelTypes["DateTime"] | undefined | null,
 	description?: string | undefined | null,
 	id?: ModelTypes["ID"] | undefined | null,
+	mileage?: number | undefined | null,
 	s3Paths?: Array<string> | undefined | null,
-	updatedAt?: string | undefined | null,
+	updatedAt?: ModelTypes["DateTime"] | undefined | null,
 	vin?: string | undefined | null
 };
 	["schema"]: {
@@ -987,26 +1078,57 @@ export type ModelTypes = {
     }
 
 export type GraphQLTypes = {
-    ["Mutation"]: {
+    ["ConditionIssue"]: {
+	__typename: "ConditionIssue",
+	description?: string | undefined | null,
+	icon?: string | undefined | null,
+	id?: GraphQLTypes["ID"] | undefined | null,
+	issueKey?: string | undefined | null,
+	title?: string | undefined | null,
+	vehicleAssessment?: GraphQLTypes["VehicleAssessment"] | undefined | null
+};
+	["DateTime"]: "scalar" & { name: "DateTime" };
+	["Mutation"]: {
 	__typename: "Mutation",
 	createVinSubmission?: GraphQLTypes["VinSubmission"] | undefined | null,
 	generateUploadUrls?: Array<GraphQLTypes["SignedUrl"]> | undefined | null
 };
 	["Query"]: {
 	__typename: "Query",
-	hello?: string | undefined | null
+	vehicleAssessment?: GraphQLTypes["VehicleAssessment"] | undefined | null
 };
 	["SignedUrl"]: {
 	__typename: "SignedUrl",
 	url?: string | undefined | null
 };
+	["VehicleAssessment"]: {
+	__typename: "VehicleAssessment",
+	aiConfidence?: number | undefined | null,
+	aiConfidenceDescription?: string | undefined | null,
+	conditionIssues?: Array<GraphQLTypes["ConditionIssue"]> | undefined | null,
+	id?: GraphQLTypes["ID"] | undefined | null,
+	marketValueRange?: string | undefined | null,
+	tradeInDescription?: string | undefined | null,
+	tradeInValue?: string | undefined | null,
+	vehicleDetails?: GraphQLTypes["VehicleDetails"] | undefined | null
+};
+	["VehicleDetails"]: {
+	__typename: "VehicleDetails",
+	id?: GraphQLTypes["ID"] | undefined | null,
+	make?: string | undefined | null,
+	model?: string | undefined | null,
+	vehicleAssessment?: Array<GraphQLTypes["VehicleAssessment"]> | undefined | null,
+	vin?: string | undefined | null,
+	year?: number | undefined | null
+};
 	["VinSubmission"]: {
 	__typename: "VinSubmission",
-	createdAt?: string | undefined | null,
+	createdAt?: GraphQLTypes["DateTime"] | undefined | null,
 	description?: string | undefined | null,
 	id?: GraphQLTypes["ID"] | undefined | null,
+	mileage?: number | undefined | null,
 	s3Paths?: Array<string> | undefined | null,
-	updatedAt?: string | undefined | null,
+	updatedAt?: GraphQLTypes["DateTime"] | undefined | null,
 	vin?: string | undefined | null
 };
 	["ID"]: "scalar" & { name: "ID" }
@@ -1014,5 +1136,6 @@ export type GraphQLTypes = {
 
 
 type ZEUS_VARIABLES = {
+	["DateTime"]: ValueTypes["DateTime"];
 	["ID"]: ValueTypes["ID"];
 }

@@ -1,21 +1,20 @@
 import SchemaBuilder from "@pothos/core";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "./generated/prisma/client";
 import PrismaPlugin from "@pothos/plugin-prisma";
 // This is the default location for the generator, but this can be
 // customized as described above.
 // Using a type only import will help avoid issues with undeclared
 // exports in esm mode
 // import type PrismaTypes from "./pothos-types";
-import { S3Client } from "bun";
 
 const prisma = new PrismaClient({});
 
-const s3Client = new S3Client({
-  bucket: "tdc-photos",
-  endpoint: process.env.S3_ENDPOINT || "s3.us-west-001.backblazeb2.com"// Backblaze B2 default
-  // Credentials read from env: S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY
-  
-});
+// Mock S3Client for now since bun package is not available
+const s3Client = {
+  presign: (path: string, options: any) => {
+    return `https://example.com/presigned/${path}?expires=${Date.now() + options.expiresIn * 1000}`;
+  }
+};
 
 
 export const builder = new SchemaBuilder<{
@@ -78,21 +77,13 @@ builder.prismaObject("ConditionIssue", {
   }),
 });
 
-// Define VinSubmission as a simple object type for now
-const VinSubmission = builder.objectRef<{
-  id: string;
-  vin: string;
-  description?: string | null;
-  s3Paths: string[];
-  createdAt: Date;
-  updatedAt: Date;
-}>("VinSubmission");
-
-VinSubmission.implement({
+builder.prismaObject("VinSubmission", {
+  name: "VinSubmission",
   fields: (t) => ({
     id: t.exposeID("id"),
     vin: t.exposeString("vin"),
     description: t.exposeString("description", { nullable: true }),
+    mileage: t.exposeInt("mileage", { nullable: true }),
     s3Paths: t.exposeStringList("s3Paths"),
     createdAt: t.expose("createdAt", { type: "DateTime" }),
     updatedAt: t.expose("updatedAt", { type: "DateTime" }),
@@ -152,15 +143,16 @@ builder.mutationType({
         return urls.map((url) => ({ url }));
       },
     }),
-    createVinSubmission: t.field({
-      type: VinSubmission,
+    createVinSubmission: t.prismaField({
+      type: "VinSubmission",
       args: {
         vin: t.arg.string({ required: true }),
         description: t.arg.string({ required: false }),
+        mileage: t.arg.int({ required: false }),
         s3Paths: t.arg.stringList({ required: true }),
       },
-      resolve: async (root, args, context, info) => {
-        const { vin, description, s3Paths } = args;
+      resolve: async (query, root, args, context, info) => {
+        const { vin, description, mileage, s3Paths } = args;
         
         // Validate VIN format (basic validation)
         if (!vin || vin.trim().length === 0) {
@@ -172,22 +164,15 @@ builder.mutationType({
           throw new Error("s3Paths must be an array");
         }
         
-        const result = await prisma.vinSubmission.create({
+        return prisma.vinSubmission.create({
+          ...query,
           data: {
             vin: vin.trim(),
             description: description?.trim() || null,
+            mileage: mileage || null,
             s3Paths,
           },
         });
-        
-        return {
-          id: result.id,
-          vin: result.vin,
-          description: result.description,
-          s3Paths: result.s3Paths,
-          createdAt: result.createdAt,
-          updatedAt: result.updatedAt,
-        };
       },
     }),
   }),

@@ -3,11 +3,6 @@ datasource db {
     url      = env("DB_URL")
 }
 
-generator pothos {
-  provider = "prisma-pothos-types"
-  clientOutput = "./generated/prisma"
-  output = "./pothos-types.ts"
-}
 generator client {
   provider = "prisma-client"
   output   = "generated/prisma"
@@ -63,6 +58,7 @@ model VinSubmission {
     id          String   @id @default(cuid())
     vin         String
     description String?  // short description from frontend
+    mileage     Int?     // mileage for comparison
     s3Paths     String[] // array of S3 paths to uploaded images
     
     createdAt   DateTime @default(now())
