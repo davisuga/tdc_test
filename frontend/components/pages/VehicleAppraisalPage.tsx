@@ -4,6 +4,7 @@ import { PageLayout } from "components/templates/PageLayout";
 import { VehicleAppraisalForm } from "components/organisms/VehicleAppraisalForm";
 import { type Photo } from "components/molecules/PhotoGrid";
 import { usePresignedUrls } from "hooks/usePresignedUrls";
+import { useCreateVinSubmission } from "hooks/useCreateVinSubmission";
 
 export function VehicleAppraisalPage() {
   // Local state management
@@ -20,6 +21,7 @@ export function VehicleAppraisalPage() {
   >(undefined);
   const [isUploading, setIsUploading] = React.useState(false);
   const { mutateAsync: createPresignedUrls, isPending } = usePresignedUrls();
+  const { mutateAsync: createVinSubmission, isPending: isSubmitting } = useCreateVinSubmission();
   // Handlers
   const handleVinChange = (newVin: string) => {
     setVin(newVin);
@@ -50,12 +52,19 @@ export function VehicleAppraisalPage() {
       vinToSubmit: string,
       notesToSubmit?: string
     ) => {
-      // TODO: replace with real analysis submission API
-      console.log("Submitting for analysis", {
-        vin: vinToSubmit,
-        paths,
-        notes: notesToSubmit,
-      });
+      try {
+        const result = await createVinSubmission({
+          vin: vinToSubmit,
+          description: notesToSubmit || undefined,
+          s3Paths: paths,
+        });
+        
+        console.log("VIN submission created successfully:", result);
+        // TODO: Handle success (e.g., show success message, redirect, etc.)
+      } catch (error) {
+        console.error("Failed to submit VIN data:", error);
+        throw error;
+      }
     };
 
     // If we have local files, upload them first
@@ -149,6 +158,7 @@ export function VehicleAppraisalPage() {
         photos={photos}
         uploadProgress={uploadProgress}
         isUploading={isUploading}
+        isSubmitting={isSubmitting}
         onVinChange={handleVinChange}
         onUpload={handleUpload}
         onNotesChange={handleNotesChange}

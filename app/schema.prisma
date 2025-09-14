@@ -58,3 +58,13 @@ model ConditionIssue {
     vehicleAssessment   VehicleAssessment @relation(fields: [vehicleAssessmentId], references: [id])
     vehicleAssessmentId String
 }
+
+model VinSubmission {
+    id          String   @id @default(cuid())
+    vin         String
+    description String?  // short description from frontend
+    s3Paths     String[] // array of S3 paths to uploaded images
+    
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+}

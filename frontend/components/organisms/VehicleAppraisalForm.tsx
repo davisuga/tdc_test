@@ -20,6 +20,7 @@ export interface VehicleAppraisalFormProps {
     total: number;
   };
   isUploading?: boolean;
+  isSubmitting?: boolean;
 }
 
 export function VehicleAppraisalForm({
@@ -32,6 +33,7 @@ export function VehicleAppraisalForm({
   photos = [],
   uploadProgress,
   isUploading = false,
+  isSubmitting = false,
 }: VehicleAppraisalFormProps) {
   return (
     <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
@@ -80,8 +82,8 @@ export function VehicleAppraisalForm({
       <UploadArea onUpload={onUpload} />
 
       <div className="flex px-4 py-3 justify-start">
-        <Button disabled={vin.length === 0} onClick={onAnalyze}>
-          Analyze Vehicle
+        <Button disabled={vin.length === 0 || isUploading || isSubmitting} onClick={onAnalyze}>
+          {isSubmitting ? "Submitting..." : "Analyze Vehicle"}
         </Button>
       </div>
     </div>

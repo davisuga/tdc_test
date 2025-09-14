@@ -1,5 +1,5 @@
 import { createYoga } from "graphql-yoga";
-import { builder } from "./builder";
+import { builder } from "./builder-simple";
 
 const yoga = createYoga({
   schema: builder.toSchema(),
