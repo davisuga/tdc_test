@@ -5,7 +5,7 @@ import { VehicleAppraisalForm } from "components/organisms/VehicleAppraisalForm"
 import { type Photo } from "components/molecules/PhotoGrid";
 import { usePresignedUrls } from "hooks/usePresignedUrls";
 import { useCreateVinSubmission } from "hooks/useCreateSubmission";
-const BUCKET_NAME = process.env.BUCKET_NAME || "tdc-photos";  
+
 export function VehicleAppraisalPage() {
   const navigate = useNavigate();
 
@@ -128,7 +128,7 @@ export function VehicleAppraisalPage() {
         const uploadedPhotos = await Promise.all(uploadPromises);
         const uploadedUrls = uploadedPhotos.map((p) => p.url);
 
-        const pathsToSubmit = uploadedUrls.map((u) => new URL(u).pathname.replace(BUCKET_NAME, ""));
+        const pathsToSubmit = uploadedUrls.map((u) => new URL(u).pathname);
         await submitForAnalysis(pathsToSubmit, vin, notes, mileage);
       } catch (error) {
         console.error("One or more uploads failed:", error);
