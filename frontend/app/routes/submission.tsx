@@ -52,7 +52,7 @@ export default function Submission({ loaderData }: Route.ComponentProps) {
           make: vehicleDetails.make || "Unknown",
           model: vehicleDetails.model || "Unknown", 
           year: vehicleDetails.year?.toString() || "Unknown",
-          mileage: "Unknown", // Not available in current schema
+          mileage: vehicleDetails.mileage || submission.mileage || "Unknown",
           vin: vehicleDetails.vin || submission.vin,
         }}
         visualScore={assessment.visualScore}

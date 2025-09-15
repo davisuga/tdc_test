@@ -4,7 +4,6 @@ import { VehicleDetailsGrid, type VehicleDetails } from "components/organisms/Ve
 import { ConditionAnalysis, type ConditionIssue } from "components/organisms/ConditionAnalysis"
 import { MarketValuation } from "components/organisms/MarketValuation"
 import { Title, Description } from "components/atoms/Typography"
-import { Car, Armchair, CircleDot } from "lucide-react"
 import { cn } from "app/lib/utils"
 
 export interface TradeInAppraisalPageProps {
@@ -70,44 +69,4 @@ export function TradeInAppraisalPage({
       </div>
     </div>
   )
-}
-
-// Default props for easy story creation
-export const defaultTradeInData: Omit<TradeInAppraisalPageProps, 'className'> = {
-  vehicleDetails: {
-    make: "Acme",
-    model: "Sedan X",
-    year: "2018",
-    mileage: "65,000 miles",
-    vin: "1ABC234DEF567890"
-  },
-  visualScore: 8,
-  maxScore: 10,
-  scoreDescription: "Excellent condition with minor wear",
-  conditionIssues: [
-    {
-      id: "scratches",
-      title: "Scratches",
-      description: "Minor scratches on the rear bumper",
-      icon: <Car size={24} />
-    },
-    {
-      id: "interior",
-      title: "Interior Wear",
-      description: "Slight discoloration on the driver's seat",
-      icon: <Armchair size={24} />
-    },
-    {
-      id: "tires",
-      title: "Tire Condition",
-      description: "Tire tread depth within acceptable limits",
-      icon: <CircleDot size={24} />
-    }
-  ],
-  marketValueRange: "$18,500 - $20,500",
-  tradeInValue: "$19,250",
-  tradeInDescription: "This value considers the vehicle's condition, market trends, and dealership profit margins.",
-  aiConfidence: 95,
-  aiConfidenceDescription: "High confidence in the analysis",
-  disclaimer: "Disclaimer: This is an AI-Assisted Estimate. Final trade-in value may vary based on a physical inspection and dealership policies."
 }
