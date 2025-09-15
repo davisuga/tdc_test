@@ -53,7 +53,7 @@ export function VehicleAppraisalForm({
 
       <div className="flex flex-wrap items-end gap-4 px-4 py-3">
         <Input
-          className="max-w-[240px]"
+
           placeholder="Enter VIN"
           value={vin}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -61,7 +61,7 @@ export function VehicleAppraisalForm({
           }
         />
         <Input
-          className="max-w-[240px]"
+
           placeholder="Mileage"
           type="number"
           value={mileage}

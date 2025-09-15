@@ -10,9 +10,9 @@ import { S3Client } from "bun";
 import { runBackgroundAssessment } from "./agents/vehicle-assessment/background-assessment";
 
 const prisma = new PrismaClient({});
-
+const BUCKET_NAME = process.env.BUCKET_NAME || "tdc-photos"; // Default bucket name
 const s3Client = new S3Client({
-  bucket: "tdc-photos",
+  bucket: BUCKET_NAME ,
   endpoint: process.env.S3_ENDPOINT || "s3.us-west-001.backblazeb2.com", // Backblaze B2 default
   // Credentials read from env: S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY
 });
@@ -21,15 +21,10 @@ export const builder = new SchemaBuilder<{
   PrismaTypes: PrismaTypes;
 }>({
   plugins: [PrismaPlugin],
-  prisma: {
+  prisma: { 
     client: prisma,
-    // defaults to false, uses /// comments from prisma schema as descriptions
-    // for object types, relations and exposed fields.
-    // descriptions can be omitted by setting description to false
     exposeDescriptions: true,
-    // use where clause from prismaRelatedConnection for totalCount (defaults to true)
     filterConnectionTotalCount: true,
-    // warn when not using a query parameter correctly
     onUnusedQuery: process.env.NODE_ENV === "production" ? null : "warn",
   },
 });
@@ -160,18 +155,11 @@ builder.mutationType({
       },
       resolve: async (query, root, args, context, info) => {
         const { vin, description, mileage, s3Paths } = args;
-
-        // Validate VIN format (basic validation)
+        
         if (!vin || vin.trim().length === 0) {
           throw new Error("VIN is required");
         }
 
-        // Validate s3Paths
-        if (!Array.isArray(s3Paths)) {
-          throw new Error("s3Paths must be an array");
-        }
-
-        // Create the submission first
         const submission = await prisma.vinSubmission.create({
           ...query,
           data: {
@@ -183,13 +171,12 @@ builder.mutationType({
         });
 
         // Run background assessment asynchronously
-        // Don't await this - let it run in the background
         runBackgroundAssessment(
           submission.id,
           vin.trim(),
           mileage || 0,
           description || '',
-          s3Paths
+          s3Paths.map((path) => path.replace(`/${BUCKET_NAME}/`, "")) // Remove leading slash if present
         ).catch((error) => {
           console.error(`Background assessment failed for submission ${submission.id}:`, error);
           // In a production system, you might want to:

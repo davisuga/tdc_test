@@ -1,0 +1,4 @@
+/bin/
+/node_modules/
+k3s-kubeconfig.yaml
+Pulumi.dev.yaml

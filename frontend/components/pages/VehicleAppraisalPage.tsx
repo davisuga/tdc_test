@@ -1,4 +1,3 @@
-// components/pages/VehicleAppraisalPage.tsx
 import * as React from "react";
 import { useNavigate } from "react-router";
 import { PageLayout } from "components/templates/PageLayout";
@@ -6,14 +5,14 @@ import { VehicleAppraisalForm } from "components/organisms/VehicleAppraisalForm"
 import { type Photo } from "components/molecules/PhotoGrid";
 import { usePresignedUrls } from "hooks/usePresignedUrls";
 import { useCreateVinSubmission } from "hooks/useCreateSubmission";
-
+const BUCKET_NAME = process.env.BUCKET_NAME || "tdc-photos";  
 export function VehicleAppraisalPage() {
   const navigate = useNavigate();
-  // Local state management
+
   const [vin, setVin] = React.useState("");
   const [notes, setNotes] = React.useState("");
   const [mileage, setMileage] = React.useState("");
-  // localFiles now stores file + preview metadata so we can derive photos without a separate photos state
+
   type LocalFile = { id: string; file: File; previewUrl: string; alt: string };
   const [localFiles, setLocalFiles] = React.useState<LocalFile[]>([]);
 
@@ -21,9 +20,10 @@ export function VehicleAppraisalPage() {
     { current: number; total: number } | undefined
   >(undefined);
   const [isUploading, setIsUploading] = React.useState(false);
-  const { mutateAsync: createPresignedUrls, isPending } = usePresignedUrls();
-  const { mutateAsync: createVinSubmission, isPending: isSubmitting } = useCreateVinSubmission();
-  // Handlers
+  const { mutateAsync: createPresignedUrls, isPending: isCreatingPresignedUrls } = usePresignedUrls();
+  const { mutateAsync: createVinSubmission, isPending: isSubmitting } =
+    useCreateVinSubmission();
+
   const handleVinChange = (newVin: string) => {
     setVin(newVin);
   };
@@ -37,7 +37,6 @@ export function VehicleAppraisalPage() {
   };
 
   const handleUpload = async (files: FileList) => {
-    // Store files in local state without uploading
     const filesArr = Array.from(files);
     const newLocalFiles: LocalFile[] = filesArr.map((file, index) => ({
       id: `${Date.now()}-${index}`,
@@ -46,12 +45,10 @@ export function VehicleAppraisalPage() {
       alt: file.name,
     }));
 
-    // Append to localFiles; previews are derived from these entries
     setLocalFiles((prev) => [...prev, ...newLocalFiles]);
   };
 
   const handleAnalyze = async () => {
-    // Function that accepts only paths and vin for submission
     const submitForAnalysis = async (
       paths: string[],
       vinToSubmit: string,
@@ -62,19 +59,19 @@ export function VehicleAppraisalPage() {
         const submission = await createVinSubmission({
           vin: vinToSubmit,
           description: notesToSubmit || undefined,
-          mileage: mileageToSubmit && mileageToSubmit.length > 0 ? Number(mileageToSubmit) : undefined,
+          mileage:
+            mileageToSubmit && mileageToSubmit.length > 0
+              ? Number(mileageToSubmit)
+              : undefined,
           s3Paths: paths,
         });
-        
-        // Navigate to submission page with the returned ID
+
         navigate(`/submissions/${submission!.id}`);
       } catch (error) {
         console.error("Failed to create submission:", error);
-        // TODO: Show error message to user
       }
     };
 
-    // If we have local files, upload them first
     if (localFiles.length > 0) {
       const fileNames = localFiles.map((lf) => lf.file.name);
       const { generateUploadUrls: response } =
@@ -89,7 +86,6 @@ export function VehicleAppraisalPage() {
       setIsUploading(true);
       setUploadProgress({ current: 0, total: localFiles.length });
 
-      // Actually upload files to presigned URLs
       const uploadPromises = localFiles.map(async (lf, index) => {
         const file = lf.file;
         const presignedUrl = urls[index];
@@ -110,7 +106,6 @@ export function VehicleAppraisalPage() {
             throw new Error(`Failed to upload ${file.name}`);
           }
 
-          // Update progress after each successful upload
           setUploadProgress((prev) =>
             prev ? { ...prev, current: prev.current + 1 } : undefined
           );
@@ -133,21 +128,14 @@ export function VehicleAppraisalPage() {
         const uploadedPhotos = await Promise.all(uploadPromises);
         const uploadedUrls = uploadedPhotos.map((p) => p.url);
 
-
-        // Submit for analysis with combined paths and notes
-  const pathsToSubmit = uploadedUrls.map((u) => new URL(u).pathname);
-  await submitForAnalysis(pathsToSubmit, vin, notes, mileage);
+        const pathsToSubmit = uploadedUrls.map((u) => new URL(u).pathname.replace(BUCKET_NAME, ""));
+        await submitForAnalysis(pathsToSubmit, vin, notes, mileage);
       } catch (error) {
         console.error("One or more uploads failed:", error);
       } finally {
         setIsUploading(false);
         setUploadProgress(undefined);
-        // Keep localFiles and previews so UI continues to show local previews after upload
       }
-    }
-    else {
-      // No files to upload; still submit VIN + notes if provided
-      await submitForAnalysis([], vin, notes, mileage);
     }
   };
 
@@ -159,7 +147,7 @@ export function VehicleAppraisalPage() {
 
   return (
     <PageLayout>
-        <VehicleAppraisalForm
+      <VehicleAppraisalForm
         vin={vin}
         mileage={mileage}
         notes={notes}
