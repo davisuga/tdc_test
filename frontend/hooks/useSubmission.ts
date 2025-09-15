@@ -52,5 +52,6 @@ export const useSubmission = (id: string) => {
     queryKey: ["submission", id],
     queryFn: () => getSubmission({ id }),
     enabled: !!id,
+    refetchInterval: 5000, // Poll every 5 seconds to check for updates
   });
 };
