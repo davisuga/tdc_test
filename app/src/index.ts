@@ -1,8 +1,8 @@
 import { createYoga } from "graphql-yoga";
-import { builder } from "./builder";
+import { schema } from "./graphql/schema";
 
 const yoga = createYoga({
-  schema: builder.toSchema(),
+  schema,
 });
 const server = Bun.serve({
   fetch: yoga,

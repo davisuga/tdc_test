@@ -1,53 +1,169 @@
-# Welcome to React Router!
+# Vehicle Appraisal Frontend
 
-A modern, production-ready template for building full-stack React applications using React Router.
+This is the frontend application for the AI-Assisted Vehicle Appraisal system. It allows users to submit vehicle information (VIN, mileage, notes) and photos for an automated assessment, then view a detailed appraisal report including visual condition, market valuation, and trade-in estimates.
 
-## Features
+The application is built with React, React Router, Tailwind CSS, and uses GraphQL for API communication.
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+##  Getting Started
 
-## Getting Started
+Follow these steps to get the project up and running on your local machine.
 
-### Installation
+### Prerequisites
 
-Install the dependencies:
+Before you begin, ensure you have the following installed:
 
-```bash
-npm install
-```
+*   **Node.js** (v18 or higher recommended)
+*   **Bun** (v1.x or higher recommended) - Used as the package manager and runtime.
+*   A running instance of the **Vehicle Appraisal Backend API**. Please refer to its documentation for setup instructions. You'll need its GraphQL endpoint.
 
-### Development
-
-Start the development server with HMR:
+### 1. Clone the Repository
 
 ```bash
-npm run dev
+git clone <your-repo-url>
+cd vehicle-appraisal-frontend
 ```
 
-Your application will be available at `http://localhost:3000`.
+### 2.1. Install Dependencies
 
-## Building for Production
-
-Create a production build:
+Using Bun as the package manager:
 
 ```bash
-npm run build
+bun install
 ```
 
-## Deployment
 
-[![Deploy to Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fremix-run%2Freact-router-templates%2Ftree%2Fmain%2Fvercel&project-name=my-react-router-app&repository-name=my-react-router-app)
+### 2.2 Generate code:
 
-## Styling
+Start the backend server, then run `bun generate:local` to generate the local
 
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
+### 3. Environment Configuration
 
----
+Create a `.env` file in the root of the project. This file will store environment-specific variables, particularly the GraphQL API endpoint.
 
-Built with ❤️ using React Router.
+```
+# .env
+
+# The URL of the GraphQL API backend
+VITE_GRAPHQL_URL="http://localhost:3000/graphql"
+```
+
+> **Note:** The `VITE_` prefix is essential for exposing environment variables to the Vite build process.
+
+### 4. Run the Development Server
+
+Start the frontend application in development mode:
+
+```bash
+bun run dev
+```
+
+The application should now be running at `http://localhost:5173`. You can open this URL in your browser.
+
+##  Project Structure Overview
+
+The codebase is organized to promote modularity, maintainability, and clear separation of concerns, following a modified Atomic Design pattern for UI components.
+
+```
+├── docs/                             # Project-level documentation (this README)
+├── public/                           # Static assets served directly by the web server
+├── src/                              # All application source code
+│   ├── app/                          # Core application logic (routes, main layout, global config)
+│   │   ├── routes/                   # React Router route definitions
+│   │   ├── root.tsx                  # Main App component & layout
+│   │   └── app.css                   # Global stylesheets
+│   │
+│   ├── components/                   # Reusable UI components (Atomic Design)
+│   │   ├── atoms/                    # Smallest, self-contained elements (e.g., Button, Input)
+│   │   ├── molecules/                # Groups of atoms forming simple UI blocks (e.g., PhotoGrid)
+│   │   ├── organisms/                # Complex UI sections (e.g., VehicleAppraisalForm)
+│   │   ├── pages/                    # Full-page components (e.g., TradeInAppraisalPage)
+│   │   └── templates/                # Layout structures for pages (e.g., PageLayout)
+│   │
+│   ├── hooks/                        # Custom React hooks encapsulating stateful/reusable logic
+│   │   ├── useCreateSubmission.ts    # Logic for creating a new submission via GraphQL
+│   │   └── ...
+│   │
+│   ├── services/                     # Client-side API integration logic
+│   │   └── graphql.ts                # Zeus GraphQL client instance configuration
+│   │
+│   ├── utils/                        # Generic, application-wide utility functions
+│   │   ├── cn.ts                     # Tailwind class merging utility
+│   │   └── iconUtils.tsx             # Lucide-react icon mapping utility
+│   │
+│   ├── generated/                    # Automatically generated code (DO NOT EDIT MANUALLY)
+│   │   └── zeus/                     # GraphQL client code generated by Zeus
+│   │
+│   └── main.tsx                      # Application entry point (client-side rendering)
+│
+├── .storybook/                       # Storybook configuration files
+├── stories/                          # Storybook stories for components
+├── vite.config.ts                    # Vite build configuration
+├── vitest.config.ts                  # Vitest test configuration
+└── ... (other config files: package.json, tsconfig.json)
+```
+
+##  Features
+
+*   **Vehicle Submission:** Users can enter VIN, mileage, notes, and upload photos.
+*   **AI-Assisted Appraisal:** Integrates with a backend API for AI-driven visual condition analysis and market valuation.
+*   **Detailed Appraisal Report:** Displays visual score, condition issues, market value range, trade-in value, and AI confidence.
+*   **Responsive UI:** Designed with Tailwind CSS for a mobile-first and responsive experience.
+*   **Modern Tooling:** Built with React, TypeScript, Vite, React Router, TanStack Query, and Storybook.
+
+##  Testing
+
+This project uses Vitest for unit/integration testing and Storybook for UI component testing and documentation.
+
+### Run All Tests
+
+```bash
+bun run test
+```
+
+### Run Unit/Integration Tests
+
+To run only the Vitest tests (excluding Storybook tests):
+
+```bash
+bun run test:vitest
+```
+
+### Run Storybook Tests
+
+To run Storybook's interaction tests:
+
+```bash
+bun run test:storybook
+```
+
+##  Storybook
+
+Storybook is used to develop, document, and test UI components in isolation.
+
+### Run Storybook
+
+To start the Storybook UI:
+
+```bash
+bun run storybook
+```
+
+This will typically open Storybook in your browser at `http://localhost:6006`.
+
+### Writing Stories
+
+*   Stories for components should be placed in the `stories/` directory.
+*   Always import components from their canonical location in `src/components/`.
+*   Use Storybook's `play` function for interaction testing where applicable.
+
+### Adding New Components
+
+*   **UI Components:** Place new reusable UI components (atoms, molecules, organisms, pages, templates) in their appropriate `src/components/` subdirectory.
+*   **Hooks:** New custom React hooks belong in `src/hooks/`.
+*   **Services:** New API integrations or complex business logic related to external services go into `src/services/`.
+*   **Utilities:** Generic helpers should be placed in `src/utils/`.
+
+### Generated Code
+
+The `src/generated/zeus/` directory contains code generated by the Zeus GraphQL client. **Do not modify these files manually.** They will be regenerated automatically based on the GraphQL schema.
+

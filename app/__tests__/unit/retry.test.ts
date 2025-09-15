@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "bun:test";
-import { makeRetry, retry5 } from "../../utils/retry";
+import { makeRetry, retry5 } from "../../src/utils/retry";
 
 describe("retry utility", () => {
   let callCount: number;

@@ -1,5 +1,5 @@
 import { ExecutionResult, graphql, GraphQLSchema } from "graphql";
-import { builder } from "../../builder";
+import { schema } from "../../src/graphql/schema";
 
 /**
  * Test context type for GraphQL operations
@@ -21,7 +21,6 @@ export async function executeGraphQL<T = any>(
   variableValues?: Record<string, unknown>,
   contextValue?: TestContext
 ): Promise<ExecutionResult<T>> {
-  const schema: GraphQLSchema = builder.toSchema();
   
   return await graphql({
     schema,
