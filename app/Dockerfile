@@ -8,16 +8,14 @@ COPY bun.lock ./
 
 # Install dependencies
 RUN bun install --production
-
+RUN apt-get update -y && apt-get install -y openssl
+COPY . .
+RUN bun prisma generate
 # Copy application code
-COPY index.ts ./
 
 # Expose the port
-EXPOSE 8080
+EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8080/health || exit 1
 
 # Run the application
-CMD ["bun", "run", "index.ts"]
+CMD ["bun", "run", "src/index.ts"]

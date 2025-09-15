@@ -9,7 +9,7 @@
     "typecheck": "react-router typegen && tsc",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "generate:local": "bun run zeus $API_URL ./"
+    "generate:local": "bun run zeus $VITE_GRAPHQL_URL ./"
   },
   "dependencies": {
     "@react-router/node": "^7.7.1",

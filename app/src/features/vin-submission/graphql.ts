@@ -1,5 +1,4 @@
 import { builder } from "../../graphql/builder";
-import { s3Client } from "../../lib/s3";
 import * as VinSubmissionService from "./service";
 import { generatePresignedUrls } from "./service";
 

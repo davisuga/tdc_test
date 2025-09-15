@@ -3,6 +3,7 @@ import z from "zod";
 export const envSchema = z.object({
     MARKETCHECK_API_KEY: z.string().min(1),
     GOOGLE_GENERATIVE_AI_API_KEY: z.string().min(1),
+    DB_URL: z.string().min(1),
 });
 
 export type Env = z.infer<typeof envSchema>;

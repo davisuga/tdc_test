@@ -5,11 +5,11 @@ datasource db {
 
 generator pothos {
   provider = "prisma-pothos-types"
-  clientOutput = "./generated/prisma"
+  clientOutput = "./prisma"
   output = "./generated/pothos-types.ts"
 }
 generator client {
-  provider = "prisma-client"
+  provider   = "prisma-client" // ESM-first
   output   = "generated/prisma"
 }
 
