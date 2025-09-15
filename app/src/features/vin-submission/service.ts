@@ -1,7 +1,7 @@
 import { prisma } from "../../lib/prisma";
 import { runAssessmentForSubmission } from "../vehicle-assessment/assessment.service";
 import type { VinSubmission } from "../../../generated/prisma/client";
-import { s3Client } from "../../lib/s3";
+import { UPLOADS_BUCKET_NAME, s3Client } from "../../lib/s3";
 
 interface CreateSubmissionArgs {
   vin: string;
@@ -24,7 +24,7 @@ export async function create(
       vin: vin.trim(),
       description: description?.trim() || null,
       mileage: mileage || null,
-      s3Paths,
+      s3Paths: s3Paths.map((path) => path.replace(`/${UPLOADS_BUCKET_NAME}/`, "")), // Remove leading slash if present
     },
   });
 
