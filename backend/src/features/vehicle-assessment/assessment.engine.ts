@@ -207,7 +207,7 @@ function computeMarketValues(
 
   const x = rows.map((r) => r.miles);
   const y = rows.map((r) => r.price);
-  const { slope, intercept } = simpleRegression(x, y);
+  const { slope } = simpleRegression(x, y);
 
   const adjusted = rows
     .map((r) => r.price + slope * (subjectMiles - r.miles))
